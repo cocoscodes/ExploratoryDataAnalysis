@@ -26,3 +26,10 @@ rug(pollution$pm25) # adds exac location in the histogram undernead
 hist(pollution$pm25, col = "green")
 abline(v=12, lwd=2)
 abline(v=median(pollution$pm25), col= "magenta",lwd=4)
+
+barplot(table(pollution$region),col = "wheat", main = "Number of Counties in Each Region")
+
+install.packages("maps")
+library(maps)
+map("county", "california")
+with(filter(pollution, pm25> 15) , points(longitude, latitude)) # not working
