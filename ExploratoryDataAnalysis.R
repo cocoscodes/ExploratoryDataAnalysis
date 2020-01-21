@@ -31,5 +31,6 @@ barplot(table(pollution$region),col = "wheat", main = "Number of Counties in Eac
 
 install.packages("maps")
 library(maps)
+library(dplyr)
 map("county", "california")
-with(filter(pollution, pm25> 15) , points(longitude, latitude)) # not working
+with(filter(pollution, pm25 > 15) , points(longitude, latitude))
