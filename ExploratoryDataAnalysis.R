@@ -21,16 +21,68 @@ boxplot(pollution$pm25, col = "blue")
 abline(h=12) # shows the line where the upper limit lies for the EPA
 
 hist(pollution$pm25, col = "green", breaks = 100) # breaks adds the number per column - size
-rug(pollution$pm25) # adds exac location in the histogram undernead
+rug(pollution$pm25) # adds exac location of the data points undernead
 
 hist(pollution$pm25, col = "green")
-abline(v=12, lwd=2)
-abline(v=median(pollution$pm25), col= "magenta",lwd=4)
+abline(v=12, lwd=2, lty=4) # line with lwd and line type lty
+abline(v=median(pollution$pm25), col= "magenta",lwd=4) 
 
 barplot(table(pollution$region),col = "wheat", main = "Number of Counties in Each Region")
+# with dply pipeline operator
+table(pollution$region) %>% barplot(col = "wheat")
 
 install.packages("maps")
 library(maps)
 library(dplyr)
 map("county", "california")
-with(filter(pollution, pm25 > 15) , points(longitude, latitude))
+with(filter(pollution, pm25>12) , points(longitude, latitude))
+
+# Exploratory graphs 2 ----
+boxplot(pm25 ~ region, data = pollution, col = "red") # pm25 Y axis and region X axis
+
+# multiple histograms
+par(mfrow = c(2,1), mar = c(4, 4, 2, 1)) # mar margins c(bottom, left, top, right)
+# mfrow c(nr,nc) number of rows and columns to present the charts together
+hist(subset(pollution, region == "east")$pm25, col = "green")
+hist(subset(pollution, region == "west")$pm25, col = "green")
+
+# par is the graphical parameters
+par(mfrow = c(1,1))
+with(pollution, plot(latitude, pm25, col= region)) 
+# plotting with latitude to observ if there any north or south trends
+abline(h = 12, lwd = 2, lty = 2)
+levels(pollution$region) # east i black default and west is red
+
+# multiple scatter plots
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West"))
+with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
+
+# other resources: https://www.r-graph-gallery.com/index.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
