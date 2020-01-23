@@ -11,7 +11,7 @@ getwd()
 # 6.- content is king - quality, relevance, and integrity of the content makes a succesfull presentation
 
 # Exploratory graphs ----
-# exploratory grpahs are ro personally understand the data, not for presentation purposes
+# exploratory graphs are for personally understand the data, not for presentation purposes
 
 pollution <- read.csv("avgpm25.csv", colClasses = c("numeric", "character", "factor", "numeric", "numeric"))
 head(pollution)
@@ -58,31 +58,134 @@ par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
 with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West"))
 with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
 
+## Lattice
+library(lattice)
+xyplot(pm25 ~ latitude | region, data = pollution)
+
+## ggplot2
+library(ggplot2)
+qplot(latitude, pm25, data = pollution, facets = . ~ region)
+
 # other resources: https://www.r-graph-gallery.com/index.html
 
+# Plotting systems in R ----
+# base plotting - adds one element one by one, cant take back the errors i.e. aadjusting margins
+data(airquality)
+with(airquality, {
+  plot(Temp, Ozone)
+  lines(loess.smooth(Temp, Ozone))
+})
 
+data(cars)
+## Create the plot / draw canvas
+with(cars, plot(speed, dist))
+## Add annotation
+title("Speed vs. Stopping distance")
 
+# Lattice system - xyplot and bwplot, good for putting many plots in one screen
+# awkward to specify an entire plot, it is not intuitive, cannot add anything
+library(lattice)
+state <- data.frame(state.x77, region = state.region)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
 
+# ggplot2 system - well rounded and rigorous package, many sthetical features done automatically
+library(ggplot2)
+data(mpg)
+qplot(displ, hwy, data = mpg)
 
+# Graphic devices ----
 
+## Make plot appear on screen device
+with(faithful, plot(eruptions, waiting))
+## Annotate with a title
+title(main = "Old Faithful Geyser data")
 
+## Open PDF device; create 'myplot.pdf' in my working directory
+pdf(file = "myplot.pdf")
+## Create plot and send to a file (no plot appears on screen)
+with(faithful, plot(eruptions, waiting))
+## Annotate plot; still nothing on screen
+title(main = "Old Faithful Geyser data")
+## Close the PDF file device
+dev.off()
+## Now you can view the file 'myplot.pdf' on your computer
 
+library(datasets)
+## Create plot on screen device
+with(faithful, plot(eruptions, waiting))
+## Add a main title
+title(main = "Old Faithful Geyser data")
+## Copy my plot to a PNG file
+dev.copy(png, file = "geyserplot.png")
+## Don't forget to close the PNG device!
+dev.off()
 
+# Basic plotting system ----
+# graphics and GRdevices are the basic packages
 
+# There are two phases to creating a base plot:
+# 1. Initializing a new plot (there are functions to call a devices plot or hist)
+# 2. Annotating (adding to) an existing plot (use ?Par)
 
+library(datasets)
+## Histogram
+hist(airquality$Ozone)
 
+## Boxplot
+airquality <- transform(airquality, Month = factor(Month))
+boxplot(Ozone ~ Month, airquality, xlab = "Month", ylab = "Ozone (ppb)")
 
+## Scatterplot
+with(airquality, plot(Wind, Ozone))
 
+## Graphic parameters
+par("lty")
+par("lwd")
+par("pch") # type of point
+par("col")
+par("bg") # background color
+par("mar") # margins size
+par("oma") # outer margins
+par("mfrow") # plots in rows
+par("mfcol") # plots in cols
+par("las") # orientation of the axis labels on the plot
 
+# Graphics functions
+# Make the initial plot
+with(airquality, plot(Wind, Ozone))
+# Add a title
+title(main = "Ozone and Wind in New York City")
 
+# add more functions
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
 
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", type = "n")) # type = "n" leaves a blank plot
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red"))
+legend("topright", pch = 1, col = c("blue", "red"), legend = c("May", "Other Months"))
 
+# Regression line in base
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", pch = 20))
+## Fit a simple linear regression model
+model <- lm(Ozone ~ Wind, airquality)
+## Draw regression line on plot
+abline(model, lwd = 2)
 
+# Multiple base plots
+par(mfrow = c(1, 2))
+with(airquality, {
+  plot(Wind, Ozone, main = "Ozone and Wind")
+  plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+})
 
-
-
-
-
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+with(airquality, {
+  plot(Wind, Ozone, main = "Ozone and Wind")
+  plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+  plot(Temp, Ozone, main = "Ozone and Temperature")
+  mtext("Ozone and Weather in New York City", outer = TRUE)
+})
 
 
 
