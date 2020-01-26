@@ -93,34 +93,7 @@ library(ggplot2)
 data(mpg)
 qplot(displ, hwy, data = mpg)
 
-# Graphic devices ----
-
-## Make plot appear on screen device
-with(faithful, plot(eruptions, waiting))
-## Annotate with a title
-title(main = "Old Faithful Geyser data")
-
-## Open PDF device; create 'myplot.pdf' in my working directory
-pdf(file = "myplot.pdf")
-## Create plot and send to a file (no plot appears on screen)
-with(faithful, plot(eruptions, waiting))
-## Annotate plot; still nothing on screen
-title(main = "Old Faithful Geyser data")
-## Close the PDF file device
-dev.off()
-## Now you can view the file 'myplot.pdf' on your computer
-
-library(datasets)
-## Create plot on screen device
-with(faithful, plot(eruptions, waiting))
-## Add a main title
-title(main = "Old Faithful Geyser data")
-## Copy my plot to a PNG file
-dev.copy(png, file = "geyserplot.png")
-## Don't forget to close the PNG device!
-dev.off()
-
-# Basic plotting system ----
+# Base plotting system ----
 # graphics and GRdevices are the basic packages
 
 # There are two phases to creating a base plot:
@@ -186,6 +159,83 @@ with(airquality, {
   plot(Temp, Ozone, main = "Ozone and Temperature")
   mtext("Ozone and Weather in New York City", outer = TRUE)
 })
+
+# Plotting with colors in R ----
+par(mfrow = c(1, 1))
+set.seed(19)
+x <- rnorm(30)
+y <- rnorm(30)
+plot(x, y, col = rep(1:3, each = 10), pch = 19)
+legend("bottomright", legend = paste("Group", 1:3), col = 1:3, pch = 19, bty = "n")
+
+par(mfrow = c(1, 2))
+image(volcano, col = heat.colors(10), main = "heat.colors()")
+image(volcano, col = topo.colors(10), main = "topo.colors()")
+
+# color utilities in R
+pal <- colorRamp(c("red", "blue")) # gives a series of combination for RGB red green blue
+pal(0) # red
+pal(1) # blue 
+pal(0.5) # purple-ish
+pal(seq(0, 1, len = 10))
+
+pal <- colorRampPalette(c("red", "yellow"))
+## Just return red and yellow
+pal(2) # hexadecimal representation of colors
+pal(10) # 10 colors between red and yellow
+
+rgb(0, 0, 234, maxColorValue = 255) # this generates any color for RBG and return the hexidecimal representation
+
+library(RColorBrewer)
+display.brewer.all()
+
+cols <- brewer.pal(3, "BuGn")
+cols
+pal <- colorRampPalette(cols)
+image(volcano, col = pal(20))
+
+set.seed(1)
+x <- rnorm(10000)
+y <- rnorm(10000)
+smoothScatter(x, y)
+
+# adding transparency
+rgb(1, 0, 0, 0.1)
+set.seed(2)
+x <- rnorm(2000)
+y <- rnorm(2000)
+plot(x, y, pch = 19)
+plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
+
+# Graphic devices ----
+
+## Make plot appear on screen device
+with(faithful, plot(eruptions, waiting))
+## Annotate with a title
+title(main = "Old Faithful Geyser data")
+
+## Open PDF device; create 'myplot.pdf' in my working directory
+pdf(file = "myplot.pdf")
+## Create plot and send to a file (no plot appears on screen)
+with(faithful, plot(eruptions, waiting))
+## Annotate plot; still nothing on screen
+title(main = "Old Faithful Geyser data")
+## Close the PDF file device
+dev.off()
+## Now you can view the file 'myplot.pdf' on your computer
+
+library(datasets)
+## Create plot on screen device
+with(faithful, plot(eruptions, waiting))
+## Add a main title
+title(main = "Old Faithful Geyser data")
+## Copy my plot to a PNG file
+dev.copy(png, file = "geyserplot.png")
+## Don't forget to close the PNG device!
+dev.off()
+
+
+
 
 
 
