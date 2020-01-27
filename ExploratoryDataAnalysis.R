@@ -87,6 +87,7 @@ title("Speed vs. Stopping distance")
 library(lattice)
 state <- data.frame(state.x77, region = state.region)
 xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(2,2))
 
 # ggplot2 system - well rounded and rigorous package, many sthetical features done automatically
 library(ggplot2)
@@ -208,8 +209,12 @@ plot(x, y, pch = 19)
 plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
 
 # Graphic devices ----
+# Vector formats are good for line drawings and plots with solid colors 
+# using a modest number of points, while bitmap formats are good for 
+# plots with a large number of points, natural scenes or web-based plots.
+?Devices
 
-## Make plot appear on screen device
+## Make plot appear on screen device like PDF, PNG, JPEG, SVG, and TIFF
 with(faithful, plot(eruptions, waiting))
 ## Annotate with a title
 title(main = "Old Faithful Geyser data")
@@ -220,9 +225,13 @@ pdf(file = "myplot.pdf")
 with(faithful, plot(eruptions, waiting))
 ## Annotate plot; still nothing on screen
 title(main = "Old Faithful Geyser data")
+## show the available devices
+dev.cur()
 ## Close the PDF file device
 dev.off()
 ## Now you can view the file 'myplot.pdf' on your computer
+
+# You can change the active graphics device with dev.set(<integer>)
 
 library(datasets)
 ## Create plot on screen device
