@@ -130,6 +130,8 @@ par("mfcol") # plots in cols
 par("las") # orientation of the axis labels on the plot
 par("pin") # size of the plot in inches
 par("fg") # foregraound color
+par("bty") # show box of the legend or change it
+par("cex") # magnify legend according to size
 
 # Graphics functions
 # Make the initial plot
@@ -249,6 +251,67 @@ title(main = "Old Faithful Geyser data")
 ## Copy my plot to a PNG file
 dev.copy(png, file = "geyserplot.png")
 ## Don't forget to close the PNG device!
+dev.off()
+
+# Week 1 Project ----
+# plot1
+library(data.table)
+library(dplyr)
+library(chron)
+data <- fread("household_power_consumption.txt")
+finalData <- subset(data, data$Date == "1/2/2007" | data$Date == "2/2/2007")
+finalData <- mutate(finalData,Date=as.Date(Date, format = "%d/%m/%Y"))
+finalData <- mutate(finalData,Time=chron(times=finalData$Time))
+vars <- names(select(finalData,Global_active_power:Sub_metering_2))
+finalData[vars] <- sapply(finalData[vars],as.numeric)
+
+str(finalData)
+
+hist(finalData$Global_active_power, 
+     col = "red",main = "Global Active Power",xlab = "Global Active Power (kilowatts)")
+
+dev.copy(png, file = "plot1.png",width=480, height=480)
+dev.off()
+
+# plot2
+finalData <- mutate(finalData,dateTime=paste(finalData$Date,finalData$Time))
+library(lubridate)
+finalData <- mutate(finalData,dateTime=ymd_hms(finalData$dateTime))
+
+str(finalData)
+
+plot(finalData$dateTime,finalData$Global_active_power, 
+     type="l", xlab = "",ylab="Global Active Power (kilowatts)")
+
+dev.copy(png, file = "plot2.png",width=480, height=480)
+dev.off()
+
+# plot3
+plot(finalData$dateTime,finalData$Sub_metering_1, type = "l", xlab = "", ylab = "Energy sub metering")
+lines(finalData$dateTime,finalData$Sub_metering_2, type = "l",col="red")
+lines(finalData$dateTime,finalData$Sub_metering_3, type = "l",col="blue")
+legend("topright", lty = c(1,1,1), col = c("black","red", "blue"), legend = c("Sub_metering_1", "Sub_metering_2","Sub_metering_3"))
+
+dev.copy(png, file = "plot3.png",width=480, height=480)
+dev.off()
+
+# plot4
+par(mfrow=c(2,2))
+plot(finalData$dateTime,finalData$Global_active_power, 
+     type="l", xlab = "",ylab="Global Active Power (kilowatts)")
+plot(finalData$dateTime,finalData$Voltage, 
+     type="l", xlab = "datetime",ylab="Volatge")
+plot(finalData$dateTime,finalData$Sub_metering_1, type = "l", xlab = "", 
+     ylab = "Energy sub metering")
+lines(finalData$dateTime,finalData$Sub_metering_2, type = "l",col="red")
+lines(finalData$dateTime,finalData$Sub_metering_3, type = "l",col="blue")
+legend("topright", lty = c(1,1,1), col = c("black","red", "blue"), 
+       legend = c("Sub_metering_1", "Sub_metering_2","Sub_metering_3"),
+       bty = "n",cex = 0.8)
+plot(finalData$dateTime,finalData$Global_reactive_power, 
+     type="l", xlab = "datetime",ylab="Global_reactive_power")
+
+dev.copy(png, file = "plot4.png",width=480, height=480)
 dev.off()
 
 
