@@ -95,7 +95,7 @@ data(mpg)
 qplot(displ, hwy, data = mpg)
 
 # Base plotting system ----
-# graphics and GRdevices are the basic packages
+# graphics (functions) and GRdevices(devices) are the basic packages
 
 # There are two phases to creating a base plot:
 # 1. Initializing a new plot (there are functions to call a devices plot or hist)
@@ -108,11 +108,16 @@ hist(airquality$Ozone)
 ## Boxplot
 airquality <- transform(airquality, Month = factor(Month))
 boxplot(Ozone ~ Month, airquality, xlab = "Month", ylab = "Ozone (ppb)")
+boxplot(Ozone~Month, airquality, xlab="Month", ylab="Ozone (ppb)",
+        col.axis="blue",col.lab="red")
+title(main = "Ozone and Wind in New York City")
 
 ## Scatterplot
 with(airquality, plot(Wind, Ozone))
 
 ## Graphic parameters
+length(par())
+names(par())
 par("lty")
 par("lwd")
 par("pch") # type of point
@@ -123,6 +128,8 @@ par("oma") # outer margins
 par("mfrow") # plots in rows
 par("mfcol") # plots in cols
 par("las") # orientation of the axis labels on the plot
+par("pin") # size of the plot in inches
+par("fg") # foregraound color
 
 # Graphics functions
 # Make the initial plot
@@ -135,9 +142,10 @@ with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City"))
 with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
 
 with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", type = "n")) # type = "n" leaves a blank plot
-with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
-with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red"))
-legend("topright", pch = 1, col = c("blue", "red"), legend = c("May", "Other Months"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue", pch=17))
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red", pch=8))
+legend("topright", pch = c(17,8), col = c("blue", "red"), legend = c("May", "Other Months"))
+abline(v=median(airquality$Wind),lty=2,lwd=2)
 
 # Regression line in base
 with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", pch = 20))
@@ -242,9 +250,6 @@ title(main = "Old Faithful Geyser data")
 dev.copy(png, file = "geyserplot.png")
 ## Don't forget to close the PNG device!
 dev.off()
-
-
-
 
 
 
