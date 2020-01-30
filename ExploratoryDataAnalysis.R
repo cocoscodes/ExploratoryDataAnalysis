@@ -171,53 +171,6 @@ with(airquality, {
   mtext("Ozone and Weather in New York City", outer = TRUE)
 })
 
-# Plotting with colors in R ----
-par(mfrow = c(1, 1))
-set.seed(19)
-x <- rnorm(30)
-y <- rnorm(30)
-plot(x, y, col = rep(1:3, each = 10), pch = 19)
-legend("bottomright", legend = paste("Group", 1:3), col = 1:3, pch = 19, bty = "n")
-
-par(mfrow = c(1, 2))
-image(volcano, col = heat.colors(10), main = "heat.colors()")
-image(volcano, col = topo.colors(10), main = "topo.colors()")
-
-# color utilities in R
-pal <- colorRamp(c("red", "blue")) # gives a series of combination for RGB red green blue
-pal(0) # red
-pal(1) # blue 
-pal(0.5) # purple-ish
-pal(seq(0, 1, len = 10))
-
-pal <- colorRampPalette(c("red", "yellow"))
-## Just return red and yellow
-pal(2) # hexadecimal representation of colors
-pal(10) # 10 colors between red and yellow
-
-rgb(0, 0, 234, maxColorValue = 255) # this generates any color for RBG and return the hexidecimal representation
-
-library(RColorBrewer)
-display.brewer.all()
-
-cols <- brewer.pal(3, "BuGn")
-cols
-pal <- colorRampPalette(cols)
-image(volcano, col = pal(20))
-
-set.seed(1)
-x <- rnorm(10000)
-y <- rnorm(10000)
-smoothScatter(x, y)
-
-# adding transparency
-rgb(1, 0, 0, 0.1)
-set.seed(2)
-x <- rnorm(2000)
-y <- rnorm(2000)
-plot(x, y, pch = 19)
-plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
-
 # Graphic devices ----
 # Vector formats are good for line drawings and plots with solid colors 
 # using a modest number of points, while bitmap formats are good for 
@@ -314,5 +267,142 @@ plot(finalData$dateTime,finalData$Global_reactive_power,
 dev.copy(png, file = "plot4.png",width=480, height=480)
 dev.off()
 
+# Lattice plotting system ----
+# plots are created in one function call
+library(lattice)
+xyplot() # scatterplots
+bwplot() # boxplots
+histogram()
+stripplot() # boxplot with points
+dotplot() # violin string
+splom() # scatterplots matrix
+levelplot() # plotting image data
+contourplot() # plotting image data
+
+library(datasets)
+xyplot(Ozone ~ Wind, data = airquality) # simple scatter plot
+
+airquality <- transform(airquality,Month = factor(Month)) # turn month into factor
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5,1)) # compare ozone and wind for each month
+
+p <- xyplot(Ozone ~ Wind, data = airquality) # nothing happens
+print(p)
+xyplot(Ozone ~ Wind, data = airquality) # autoprints
+
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1,each=50)
+y <- x+f-f*x+rnorm(100, sd=0.5)
+f <- factor(f, labels = c("Group 1","Group 2"))
+xyplot(y~x | f, layout=c(2,1))
+# custom panel function
+xyplot(y~x | f, panel = function(x,y,...){
+  panel.xyplot(x,y,...)# first call the default panel function
+  panel.abline(h=median(y),lty = 2) # add a horizontal line
+})
+
+xyplot(y~x | f, panel = function(x,y,...){
+  panel.xyplot(x,y,...)# first call the default panel function
+  panel.lmline(x,y,col=2) # add a linear regression line
+})
+
+# ggplot2 - qplot ----
+library(ggplot2)
+# uses grammar of graphics
+qplot()# quick plot
+ggplot()# best function
+
+# qplot function
+str(mpg)
+qplot(displ,hwy,data = mpg, color=drv) # aesthetics
+
+qplot(displ,hwy,data = mpg, geom=c("point","smooth")) # adding elements
+
+qplot(hwy, data = mpg, fill = drv, binwidth = 2) # histogram
+
+qplot(drv, hwy, data = mpg, geom = "boxplot")
+
+# facets
+qplot(hwy, data = mpg, facets = drv ~ ., binwidth = 2) # the ".~" sign after and before the elements defines if the facets are shown vertivally or horizontally
+qplot(displ, hwy, data = mpg, facets = . ~ drv)
+
+qplot(displ, hwy, data = mpg, facets = . ~ drv) + geom_smooth()
+qplot(displ, hwy, data = mpg, facets = . ~ drv, geom = c("point", "smooth")) # the same as above
+
+load(file = "maacs.Rda")
+str(maacs)
+qplot(log(eno), data = maacs)
+qplot(log(eno), data = maacs, fill = mopos)
+qplot(log(eno), data = maacs, geom = "density")
+qplot(log(eno), data = maacs, geom = "density", color = mopos)
+qplot(log(pm25), log(eno), data = maacs, geom = c("point", "smooth"))
+qplot(log(pm25), log(eno), data = maacs, shape = mopos)
+qplot(log(pm25), log(eno), data = maacs, color = mopos)
+qplot(log(pm25), log(eno), data = maacs, color = mopos,
+      geom = c("point", "smooth"), method = "lm")
+qplot(log(pm25), log(eno), data = maacs, geom = c("point", "smooth"),
+      method = "lm", facets = . ~ mopos)
+
+#ggplot2 - ggplot ----
+# Components aesthetics, geoms, facets, stats, scales, coordinate systems
+maacs2 <- read.csv("bmi_pm25_no2_sim.csv")
+str(maacs2)
+g <- ggplot(maacs2, aes(logpm25, NocturnalSympt))
+summary(g)
+class(g)
+print(g)# cant print cause we have not ddded layers
+g + geom_point()
+g + geom_point() + geom_smooth() # by default uses method loess
+g + geom_point() + geom_smooth(method = "lm")
+g + geom_point() +
+  geom_smooth(method = "lm") +
+  facet_grid(. ~ bmicat)
 
 
+
+# Plotting with colors in R ----
+par(mfrow = c(1, 1))
+set.seed(19)
+x <- rnorm(30)
+y <- rnorm(30)
+plot(x, y, col = rep(1:3, each = 10), pch = 19)
+legend("bottomright", legend = paste("Group", 1:3), col = 1:3, pch = 19, bty = "n")
+
+par(mfrow = c(1, 2))
+image(volcano, col = heat.colors(10), main = "heat.colors()")
+image(volcano, col = topo.colors(10), main = "topo.colors()")
+
+# color utilities in R
+pal <- colorRamp(c("red", "blue")) # gives a series of combination for RGB red green blue
+pal(0) # red
+pal(1) # blue 
+pal(0.5) # purple-ish
+pal(seq(0, 1, len = 10))
+
+pal <- colorRampPalette(c("red", "yellow"))
+## Just return red and yellow
+pal(2) # hexadecimal representation of colors
+pal(10) # 10 colors between red and yellow
+
+rgb(0, 0, 234, maxColorValue = 255) # this generates any color for RBG and return the hexidecimal representation
+
+library(RColorBrewer)
+display.brewer.all()
+
+cols <- brewer.pal(3, "BuGn")
+cols
+pal <- colorRampPalette(cols)
+image(volcano, col = pal(20))
+
+set.seed(1)
+x <- rnorm(10000)
+y <- rnorm(10000)
+smoothScatter(x, y)
+
+# adding transparency
+rgb(1, 0, 0, 0.1)
+set.seed(2)
+x <- rnorm(2000)
+y <- rnorm(2000)
+plot(x, y, pch = 19)
+plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
