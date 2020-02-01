@@ -354,11 +354,48 @@ print(g)# cant print cause we have not ddded layers
 g + geom_point()
 g + geom_point() + geom_smooth() # by default uses method loess
 g + geom_point() + geom_smooth(method = "lm")
-g + geom_point() +
-  geom_smooth(method = "lm") +
-  facet_grid(. ~ bmicat)
+g + geom_point() + geom_smooth(method = "lm") + facet_grid(. ~ bmicat)
 
+# modify further commponents - xlab, ylab, labs, ggtitle. 
+# each geom has modifying functions
+# for global changes use theme(legend.position = "none") 
 
+g + geom_point(color = "steelblue", size = 4, alpha = 1/2) # alpha is transparency
+g + geom_point(aes(color = bmicat), size = 4, alpha = 1/2) # we can map aesthetics within the geom
+g + geom_point(aes(color = bmicat)) + labs(title = "MAACS Cohort") +
+  labs(x = expression("log " * PM[2.5]), y = "Nocturnal Symptoms")
+g + geom_point(aes(color = bmicat), size = 2, alpha = 1/2) +
+  geom_smooth(size = 4, linetype = 3, method = "lm", se = FALSE)
+g + geom_point(aes(color = bmicat)) + theme_bw(base_family = "Times")
+
+# more complex example - How does the relationship between PM2.5 and nocturnal 
+# symptoms vary by BMI category and nitrogen dioxide (NO2)?
+cutpoints <- quantile(maacs2$logno2_new, seq(0, 1, length = 4), na.rm = TRUE) # finding the tertiles
+
+maacs2$no2tert <- cut(maacs2$logno2_new, cutpoints) # turning into categorical variables
+## See the levels of the newly created factor variable
+levels(maacs2$no2tert)
+
+## Setup ggplot with data frame
+g <- ggplot(maacs2, aes(logpm25, NocturnalSympt))
+## Add layers
+g + geom_point(alpha = 1/3) +
+  facet_wrap(bmicat ~ no2tert, nrow = 2, ncol = 4) +
+  geom_smooth(method="lm", se=FALSE, col="steelblue") + # se are the starndar error bars
+  theme_bw(base_family = "Avenir", base_size = 10) +
+  labs(x = expression("log " * PM[2.5])) +
+  labs(y = "Nocturnal Symptoms") +
+  labs(title = "MAACS Cohort")
+
+# Axis limits
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50,2] <- 100 ## Outlier!
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3,3))
+
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line()
+g + geom_line() + ylim(-3, 3) # NOTE: ggplot eliminates all values outside the limits
+g + geom_line() + coord_cartesian(ylim = c(-3, 3)) # coord_cartesian, replicates the plot function
 
 # Plotting with colors in R ----
 par(mfrow = c(1, 1))
@@ -406,3 +443,7 @@ x <- rnorm(2000)
 y <- rnorm(2000)
 plot(x, y, pch = 19)
 plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
+
+
+
+
