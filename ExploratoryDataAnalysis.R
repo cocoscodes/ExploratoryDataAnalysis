@@ -410,18 +410,25 @@ image(volcano, col = heat.colors(10), main = "heat.colors()")
 image(volcano, col = topo.colors(10), main = "topo.colors()")
 
 # color utilities in R
+sample(colors(),10) # 657 predefined colors in colors()
 pal <- colorRamp(c("red", "blue")) # gives a series of combination for RGB red green blue
 pal(0) # red
 pal(1) # blue 
 pal(0.5) # purple-ish
-pal(seq(0, 1, len = 10))
+pal(seq(0, 1, len = 10)) # Six vectors (each of length 3) are returned
 
 pal <- colorRampPalette(c("red", "yellow"))
 ## Just return red and yellow
 pal(2) # hexadecimal representation of colors
 pal(10) # 10 colors between red and yellow
+0xCC # this allows to transform hexadecimal into colorRamp values
+0x33 # another example
+color.scale?????
 
 rgb(0, 0, 234, maxColorValue = 255) # this generates any color for RBG and return the hexidecimal representation
+?rbg # fourth argument is alpha, to be a logical or a numerical value
+p3 <- colorRampPalette(c("blue","green"),alpha=.5) # Alpha represents an opacity level
+p3(5)
 
 library(RColorBrewer)
 display.brewer.all()

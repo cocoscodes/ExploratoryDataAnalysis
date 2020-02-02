@@ -18,3 +18,6 @@ data("diamonds")
 head(diamonds)
 xyplot(price~carat|color*cut,data = diamonds,strip = FALSE,pch=20, # strip will label each panel
        xlab = myxlab,ylab = myylab,main=mymain)
+
+
+
