@@ -306,6 +306,10 @@ xyplot(y~x | f, panel = function(x,y,...){
   panel.lmline(x,y,col=2) # add a linear regression line
 })
 
+library(nlme)
+library(lattice)
+xyplot(weight ~ Time | Diet, BodyWeight)
+
 # ggplot2 - qplot ----
 library(ggplot2)
 # uses grammar of graphics
@@ -396,6 +400,84 @@ g <- ggplot(testdat, aes(x = x, y = y))
 g + geom_line()
 g + geom_line() + ylim(-3, 3) # NOTE: ggplot eliminates all values outside the limits
 g + geom_line() + coord_cartesian(ylim = c(-3, 3)) # coord_cartesian, replicates the plot function
+
+# Hierachichal clustering ----
+# The point of clustering is to organize things or observations that are close together
+#and separate them into groups.
+# • How do we define close?
+# • How do we group things?
+# • How do we visualize the grouping?
+# • How do we interpret the grouping?
+# The algorithm is recursive and goes as follows:
+# 1. Find closest two things points in your dataset
+# 2. Put them together and call them a “point”
+# 3. Use your new “dataset” with this new point and repeat
+# Define a distance measurement
+# • Euclidean distance: A continuous metric which can be thought of in geometric
+# terms as the “straight-line” distance between two points.
+# • Correlation similarity: Similar in nature to Euclidean distance
+# • “Manhattan” distance: on a grid or lattice, how many “city blocks” would you have
+# to travel to get from point A to point B?
+
+set.seed(1234)
+x <- rnorm(12, rep(1:3, each = 4), 0.2)
+y <- rnorm(12, rep(c(1, 2, 1), each = 4), 0.2)
+plot(x, y, col = "blue", pch = 19, cex = 2)
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+dataFrame <- data.frame(x=x, y=y)
+dist(dataFrame)
+rdistxy <- as.matrix(dist(dataFrame))
+## Remove the diagonal from consideration
+diag(rdistxy) <- diag(rdistxy) + 100000
+# Find the index of the points with minimum distance
+ind <- which(rdistxy == min(rdistxy), arr.ind = TRUE)
+ind
+plot(x, y, col = "blue", pch = 19, cex = 2)
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+points(x[ind[1, ]], y[ind[1, ]], col = "orange", pch = 19, cex = 2)
+par(mfrow = c(1, 2))
+plot(x, y, col = "blue", pch = 19, cex = 2, main = "Data")
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+points(x[ind[1, ]], y[ind[1, ]], col = "orange", pch = 19, cex = 2)
+# Make a cluster and cut it at the right height
+library(dplyr)
+hcluster <- dist(dataFrame) %>% hclust
+dendro <- as.dendrogram(hcluster)
+cutDendro <- cut(dendro, h = (hcluster$height[1] + 0.00001))
+plot(cutDendro$lower[[11]], yaxt = "n", main = "Begin building tree")
+nextmin <- rdistxy[order(rdistxy)][3]
+ind <- which(rdistxy == nextmin,arr.ind=TRUE)
+ind
+hClustering <- data.frame(x=x,y=y) %>% dist %>% hclust
+plot(hClustering)
+
+# Pretty dendogram function
+myplclust <- function(hclust, lab = hclust$labels, 
+                      lab.col = rep(1, length(hclust$labels)), 
+                      hang = 0.1, ...) {
+  ## modifiction of plclust for plotting hclust objects *in colour*! Copyright
+  ## Eva KF Chan 2009 Arguments: hclust: hclust object lab: a character vector
+  ## of labels of the leaves of the tree lab.col: colour for the labels;
+  ## NA=default device foreground colour hang: as in hclust & plclust Side
+  ## effect: A display of hierarchical cluster with coloured leaf labels.
+  y <- rep(hclust$height, 2)
+  x <- as.numeric(hclust$merge)
+  y <- y[which(x < 0)]
+  x <- x[which(x < 0)]
+  x <- abs(x)
+  y <- y[order(x)]
+  x <- x[order(x)]
+  plot(hclust, labels = FALSE, hang = hang, ...)
+  text(x = x, y = y[hclust$order] - (max(hclust$height) * hang), labels = lab[hclust$order],
+       col = lab.col[hclust$order], srt = 90, adj = c(1, 0.5), xpd = NA, ...)
+}
+
+hClustering <- data.frame(x = x, y = y) %>% dist %>% hclust
+myplclust(hClustering, lab = rep(1:3, each = 4), lab.col = rep(1:3, each = 4))
+
+# heatmap
+dataMatrix <- data.frame(x=x,y=y) %>% data.matrix
+heatmap(dataMatrix)
 
 # Plotting with colors in R ----
 par(mfrow = c(1, 1))
