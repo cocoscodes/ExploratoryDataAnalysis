@@ -403,7 +403,7 @@ g + geom_line() + coord_cartesian(ylim = c(-3, 3)) # coord_cartesian, replicates
 
 # Hierachichal clustering ----
 # The point of clustering is to organize things or observations that are close together
-#and separate them into groups.
+# and separate them into groups.
 # • How do we define close?
 # • How do we group things?
 # • How do we visualize the grouping?
@@ -479,6 +479,154 @@ myplclust(hClustering, lab = rep(1:3, each = 4), lab.col = rep(1:3, each = 4))
 dataMatrix <- data.frame(x=x,y=y) %>% data.matrix
 heatmap(dataMatrix)
 
+# K mean clustering ----
+set.seed(1234)
+x <- rnorm(12, mean = rep(1:3, each = 4), sd = 0.2)
+y <- rnorm(12, mean = rep(c(1, 2, 1), each = 4), sd = 0.2)
+plot(x, y, col = "blue", pch = 19, cex = 2)
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+dataFrame <- data.frame(x, y)
+kmeansObj <- kmeans(dataFrame, centers = 3)
+names(kmeansObj)
+kmeansObj$cluster
+par(mar=rep(0.2,4))
+plot(x,y,col=kmeansObj$cluster,pch = 19, cex = 2)
+points(kmeansObj$centers,col=1:3,pch = 19, cex = 3,lwd=3)
+dev.off()
+
+# kmeans heatmap
+set.seed(1234)
+dataMatrix <- as.matrix(dataFrame)[sample(1:12), ]
+kmeansObj <- kmeans(dataMatrix, centers = 3)
+par(mfrow = c(1, 2))
+image(t(dataMatrix)[, nrow(dataMatrix):1], yaxt = "n", main = "Original Data")
+image(t(dataMatrix)[, order(kmeansObj$cluster)], yaxt = "n", main = "Clustered Data")
+dev.off()
+
+# Dimension reduction ----
+set.seed(12345)
+dataMatrix <- matrix(rnorm(400), nrow = 40)
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+heatmap(dataMatrix)
+
+set.seed(678910)
+for (i in 1:40) {
+  coinFlip <- rbinom(1, size = 1, prob = 0.5)
+  ## If coin is heads add a common pattern to that row
+  if (coinFlip) {
+    dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0, 3), each = 5)
+  }
+}
+image(1:10, 1:40, t(dataMatrix)[, nrow(dataMatrix):1])
+heatmap(dataMatrix)
+
+library(dplyr)
+hh <- dist(dataMatrix) %>% hclust
+dataMatrixOrdered <- dataMatrix[hh$order, ]
+par(mfrow = c(1, 3))
+## Complete data
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1])
+## Show the row means
+plot(rowMeans(dataMatrixOrdered), 40:1, xlab = "Row Mean", ylab = "Row", pch = 19)
+## Show the column means
+plot(colMeans(dataMatrixOrdered), xlab = "Column", ylab = "Column Mean", pch = 19)
+
+# unpacking SVD:(singular value decomposition) u an v
+svd1 <- svd(scale(dataMatrixOrdered))
+par(mfrow = c(1, 3))
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1], main = "Original Data")
+plot(svd1$u[, 1], 40:1, ylab = "Row", xlab = "First left singular vector",
+       pch = 19)
+plot(svd1$v[, 1], xlab = "Column", ylab = "First right singular vector", pch = 19)
+
+## Approximate original data with outer product of first singular vectors
+approx <- with(svd1, outer(u[, 1], v[, 1]))
+## Plot original data and approximated data
+par(mfrow = c(1, 2))
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1], main = "Original Matrix")
+image(t(approx)[, nrow(approx):1], main = "Approximated Matrix")
+
+# components of SVD
+constantMatrix <- dataMatrixOrdered * 0
+for (i in 1:dim(dataMatrixOrdered)[1]) {
+  constantMatrix[i, ] <- rep(c(0, 1), each = 5)
+}
+svd1 <- svd(constantMatrix)
+par(mfrow = c(1, 3))
+image(t(constantMatrix)[, nrow(constantMatrix):1], main = "Original Data")
+plot(svd1$d, xlab = "Column", ylab = "Singular value", pch = 19)
+plot(svd1$d^2/sum(svd1$d^2), xlab = "Column", 
+     ylab = "Prop. of variance explained", pch = 19)
+
+par(mfrow = c(1, 2))
+svd1 <- svd(scale(dataMatrixOrdered))
+plot(svd1$d, xlab = "Column", ylab = "Singular value", pch = 19)
+plot(svd1$d^2/sum(svd1$d^2), xlab = "Column", ylab = "Prop. of variance explained",
+     pch = 19)
+
+#As we mentioned above, the SVD has a close connection to principal components analysis (PCA).
+svd1 <- svd(scale(dataMatrixOrdered))
+pca1 <- prcomp(dataMatrixOrdered, scale = TRUE)
+plot(pca1$rotation[, 1], svd1$v[, 1], pch = 19, xlab = "Principal Component 1",
+       ylab = "Right Singular Vector 1")
+abline(c(0, 1))
+
+set.seed(678910)
+for (i in 1:40) {
+  coinFlip1 <- rbinom(1, size = 1, prob = 0.5)
+  coinFlip2 <- rbinom(1, size = 1, prob = 0.5)
+  if (coinFlip1) {
+    ## Pattern 1
+    dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0, 5), each = 5)
+  }
+  if (coinFlip2) {
+    ## Pattern 2
+    dataMatrix[i, ] <- dataMatrix[i, ] + rep(c(0, 5), 5)
+  }
+}
+hh <- hclust(dist(dataMatrix))
+dataMatrixOrdered <- dataMatrix[hh$order, ]
+# Here is a plot of this new dataset along with the two different patterns.
+svd2 <- svd(scale(dataMatrixOrdered))
+par(mfrow = c(1, 3))
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1], main = "Data")
+plot(rep(c(0, 1), each = 5), pch = 19, xlab = "Column", ylab = "Pattern 1",
+     main = "Block pattern")
+plot(rep(c(0, 1), 5), pch = 19, xlab = "Column", ylab = "Pattern 2", main = "Alternating pattern")
+
+# We can apply the SVD/PCA to this matrix and see how well the patterns are picked up.
+svd2 <- svd(scale(dataMatrixOrdered))
+par(mfrow = c(1, 3))
+image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1])
+plot(svd2$v[, 1], pch = 19, xlab = "Column", ylab = "First right singular vector")
+plot(svd2$v[, 2], pch = 19, xlab = "Column", ylab = "Second right singular vector")
+
+# When we look at the variance explained, we can see that the first singular vector picks
+# up a little more than 50% of the variation in the data.
+svd1 <- svd(scale(dataMatrixOrdered))
+par(mfrow = c(1, 2))
+plot(svd1$d, xlab = "Column", ylab = "Singular value", pch = 19)
+plot(svd1$d^2/sum(svd1$d^2), xlab = "Column", ylab = "Percent of variance explained",
+     pch = 19)
+
+# Dealing with missing values
+dataMatrix2 <- dataMatrixOrdered
+## Randomly insert some missing data
+dataMatrix2[sample(1:100, size = 40, replace = FALSE)] <- NA
+
+svd1 <- svd(scale(dataMatrix2)) # Error in svd(scale(dataMatrix2)) : infinite or missing values in 'x'
+if (!requireNamespace("BiocManager", quietly = TRUE)) 
+install.packages("BiocManager")
+BiocManager::install("impute")
+library(impute)
+dataMatrix2 <- impute.knn(dataMatrix2)$data
+
+svd1 <- svd(scale(dataMatrixOrdered))
+svd2 <- svd(scale(dataMatrix2))
+par(mfrow = c(1, 2))
+plot(svd1$v[, 1], pch = 19, main = "Original dataset")
+plot(svd2$v[, 1], pch = 19, main = "Imputed dataset")
+
 # Plotting with colors in R ----
 par(mfrow = c(1, 1))
 set.seed(19)
@@ -505,7 +653,7 @@ pal(2) # hexadecimal representation of colors
 pal(10) # 10 colors between red and yellow
 0xCC # this allows to transform hexadecimal into colorRamp values
 0x33 # another example
-color.scale?????
+?color.scale
 
 rgb(0, 0, 234, maxColorValue = 255) # this generates any color for RBG and return the hexidecimal representation
 ?rbg # fourth argument is alpha, to be a logical or a numerical value

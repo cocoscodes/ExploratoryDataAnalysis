@@ -61,4 +61,81 @@ g + geom_point(alpha=1/3)+facet_grid(cut~car2)+geom_smooth(method = "lm",size=3,
 
 ggplot(diamonds,aes(carat,price))+geom_boxplot()+facet_grid(.~cut)
 
+# Hierachichal clusters
+# complete linkage - take the greatest distance between the pairs of points in those two clusters
+# Average linkage - First you compute an "average" point in each cluster, Then you compute the distances between each cluster average to compute the intercluster distance.
+# the number of clusters depends on the distance we decide to cut it
 
+# k means
+kmeans(dataFrame,centers = 3)
+
+# Dimensions reduction
+# As data scientists, we'd like to find a smaller set of multivariate variables that are
+# uncorrelated AND explain as much variance (or variability) of the data as possible. This is a
+# statistical approach.
+# Two related solutions to these problems are PCA which stands for Principal Component Analysis
+# and SVD, Singular Value Decomposition. This latter simply means that we express a matrix X of
+# observations (rows) and variables (columns) as the product of 3 other matrices, i.e., X=UDV^t.
+# This last term (V^t) represents the transpose of the matrix V.
+
+svd(mat)
+matu%*%diag%*%t(matv)
+# We'll demonstrate this now. First we have to scale mat, our simple example data matrix.  This
+# means that we subtract the column mean from every element and divide the result by the column
+# standard deviation. 
+svd(scale(mat))
+prcomp(scale(mat)) # principal componets
+
+svd1$v[,1]
+a1 <- (svd1$u[,1] * svd1$d[1]) %*% t(svd1$v[,1])
+a2 <- svd1$u[,1:2] %*% diag(svd1$d[1:2]) %*% t(svd1$v[,1:2])
+myImage(svd1$u[,1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[,1:10]))
+
+# Clustering example
+dim(ssd)
+names(ssd[,562:563])
+table(ssd$subject)
+sum(table(ssd$subject))
+table(ssd$activity)
+sub1 <- subset(ssd,subject==1)
+dim(sub1)
+names(sub1[,1:12])
+
+par(mfrow=c(1, 2), mar = c(5, 4, 1, 1))
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[, 2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright",legend=unique(sub1$activity),col=unique(sub1$activity), pch = 1)
+par(mfrow=c(1,1))
+showMe(1:6)
+
+mdist <- dist(sub1[,1:3])
+hclustering <- hclust(mdist)
+myplclust(hclustering,lab.col = unclass(sub1$activity))
+
+mdist <- dist(sub1[,10:12])
+hclustering <- hclust(mdist)
+myplclust(hclustering,lab.col = unclass(sub1$activity))
+
+svd1 <- svd(scale(sub1[,-c(562,563)]))
+maxCon <- which.max(svd1$v[,2])
+mdist <- dist(sub1[,c(10:12,maxCon)])
+hclustering <- hclust(mdist)
+myplclust(hclustering,lab.col = unclass(sub1$activity))
+
+names(sub1[maxCon])
+kClust <- kmeans(sub1[,-c(562:563)],centers = 6)
+table(kClust$cluster,sub1$activity)
+
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart=100)
+table(kClust$cluster, sub1$activity)
+
+dim(kClust$centers)
+laying <- which(kClust$size==29)
+plot(kClust$centers[laying,1:12],pch=19,ylab = "Laying Cluster")
+names(sub1[,1:3])
+
+walkdown <- which(kClust$size==49)
+plot(kClust$centers[walkdown,1:12],pch=19,ylab = "Walkdown Cluster")
+  
+  
+  
