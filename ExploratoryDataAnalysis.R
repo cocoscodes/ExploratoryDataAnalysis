@@ -681,6 +681,134 @@ y <- rnorm(2000)
 plot(x, y, pch = 19)
 plot(x, y, pch = 19, col = rgb(0, 0, 0, 0.15))
 
+# EDA case study - samsung ----
+getwd()
+setwd("./UCI HAR Dataset")
+samsungdata <- read.table("tidyData.txt",header = TRUE)
+str(samsungdata)
+names(samsungdata)[1:12]
+sub1 <- subset(samsungdata,subject==1)
+par(mfrow=c(1,2),mar=c(5,4,1,1))
+plot(samsungdata[,3],col=samsungdata$activity,ylab = names(samsungdata)[3])
+plot(samsungdata[,4],col=samsungdata$activity,ylab = names(samsungdata)[4])
+legend("bottomright",legend = unique(sub1$activity), col = unique(sub1$activity),
+       pch = 1)
 
+# hclustering
+distanceMatrix <- dist(samsungdata[,3:5])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col = unclass(samsungdata$activity))
 
+par(mfrow=c(1,2))
+plot(samsungdata[,10],col=samsungdata$activity,ylab = names(samsungdata)[10], pch=19)
+plot(samsungdata[,12],col=samsungdata$activity,ylab = names(samsungdata)[12], pch=19)
+
+distanceMatrix <- dist(samsungdata[,10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col = unclass(samsungdata$activity))
+
+# single value decomposition
+svd1 <- svd(scale(samsungdata[,-c(1:2)]))
+par(mfrow=c(1,2))
+plot(svd1$u[,1],col=samsungdata$activity, pch=19)
+plot(svd1$u[,2],col=samsungdata$activity, pch=19)
+dev.off()
+
+# Find max contributor
+plot(svd1$v[,4], pch=19)
+maxContrib <- which.max(svd1$v[,4])
+distanceMatrix <- dist(samsungdata[10:12,maxContrib])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering,lab.col = unclass(samsungdata$activity))
+
+names(samsungdata)[maxContrib]
+
+# Kmean clustering
+kclust <- kmeans(samsungdata[,-c(1:2)], centers = 6, nstart = 1) # by adding nstart = 1 we are able to better separate the cluster based on activity, by defining the starting point
+table(kclust$cluster,samsungdata$activity)
+plot(kclust$centers[1,1:10],pch=19,ylab = "Cluster centers",xlab = "") # laying
+plot(kclust$centers[4,1:10],pch=19,ylab = "Cluster centers",xlab = "") # walking
+
+# EDA case study - pm25 ----
+getwd()
+setwd(".EDA pm2.5")
+
+data2019 <- read.csv("daily_88101_2019.csv")
+data1999 <- read.csv("daily_88101_1999.csv")
+
+names(data2019) == names(data1999) # TRUE
+str(data2019)
+head(data1999)
+
+summary(data2019$X1st.Max.Value)
+summary(data1999$X1st.Max.Value)
+values2019 <- data2019$X1st.Max.Value # this are the monitors measurements
+values1999 <- data1999$X1st.Max.Value
+
+mean(is.na(values2019)) # no NAs
+mean(is.na(values1999))
+
+boxplot(values1999,values2019)
+boxplot(log10(values1999),log10(values2019)) # log10 to eliminate extreme values
+
+negative <- values2019<0 # why do we have negative values?
+str(negative)
+sum(negative, na.rm = TRUE)
+mean(negative, na.rm = TRUE)
+dates <- as.Date(data2019$Date.Local)
+str(dates)
+
+hist(dates,"month")
+hist(dates[negative],"month") # not clear explanation for the negative errors
+
+# we select 36 = to new york
+site0 <- unique(subset(data2019, State.Code ==36, c(County.Code,Site.Num)))
+site1 <- unique(subset(data1999, State.Code ==36, c(County.Code,Site.Num)))
+
+head(site0)
+head(site1)
+site0 <- paste(site0$County.Code,site0$Site.Num, sep = ".") # merge columns to filter
+site1 <- paste(site1$County.Code,site1$Site.Num, sep = ".")
+str(site0)
+both <- intersect(site0,site1) # look for the intersect to compare changes between years
+both
+
+data1999$SiteId <- with(data1999,paste(County.Code,Site.Num,sep = ".")) # new column
+data2019$SiteId <- with(data2019,paste(County.Code,Site.Num,sep = "."))
+
+nycData2019 <- subset(data2019,State.Code==36 & SiteId %in% both )
+nycData1999 <- subset(data1999,State.Code==36 & SiteId %in% both )
+
+sapply(split(nycData1999,nycData1999$SiteId),nrow) # here we know how many counties and monitors are
+sapply(split(nycData2019,nycData2019$SiteId),nrow) # we selected 1.5
+
+# new data sets
+nycData1999 <- subset(nycData1999,SiteId=="1.5")
+nycData2019 <- subset(nycData2019,SiteId=="1.5")
+str(nycData1999)
+
+rng <- range(nycData1999$X1st.Max.Value,nycData2019$X1st.Max.Value)
+# plot and compare 
+par(mfrow = c(1,2), mar = c(4, 4, 2, 1))
+plot(nycData1999$Date.Local,nycData1999$X1st.Max.Value,ylim=rng)
+abline(h=median(nycData1999$X1st.Max.Value))
+plot(nycData2019$Date.Local,nycData2019$X1st.Max.Value,ylim=rng)
+abline(h=median(nycData2019$X1st.Max.Value))
+dev.off()
+
+# compare means by state by year
+mn0 <- with(data1999,tapply(X1st.Max.Value,State.Code,mean,na.rm=TRUE))
+str(mn0)
+mn1 <- with(data2019,tapply(X1st.Max.Value,State.Code,mean,na.rm=TRUE))
+str(mn1)
+
+# create 2 data frames and merge them to plot them
+d0 <- data.frame(States=names(mn0),mean=mn0)
+d1 <- data.frame(States=names(mn1),mean=mn1)
+mrg <- merge(d0,d1,by="States")
+head(mrg)
+
+with(mrg,plot(rep(1999,52),mrg[,2],xlim = c(1998,2020)))
+with(mrg,points(rep(2019,52),mrg[,3]))
+segments(rep(1999,52),mrg[,2],rep(2019,52),mrg[,3]) # joint points
 
