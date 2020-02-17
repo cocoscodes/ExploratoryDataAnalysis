@@ -859,8 +859,7 @@ dev.off()
 # from 1999–2008? Use the ggplot2 plotting system to make a plot answer this question.
 library(dplyr)
 library(ggplot2)
-balt <- subset(NEI,NEI$fips=="24510")
-dbalt <- balt %>%
+dbalt <- subset(NEI,NEI$fips=="24510") %>%
     group_by(Year = year,Type=type) %>%
     summarise(Values=sum(Emissions))
 ggplot(dbalt,aes(dbalt$Year,dbalt$Values))+ 
@@ -871,5 +870,54 @@ dev.copy(png, file = "plot3.png",width=480, height=480)
 dev.off()
 
 # Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
-unique(SCC$EI.Sector %in%"Coal")
+library(dplyr)
+library(ggplot2)
+coal <- SCC[grepl("Coal$",SCC$EI.Sector),]
+idx <- as.character(coal[,1])
+UScoal<- subset(NEI,NEI$SCC %in% idx) %>%
+  group_by(Year=year) %>%
+  summarise(Value=sum(Emissions))
+
+ggplot(UScoal,aes(UScoal$Year,UScoal$Value))+geom_line()+
+  labs(title = "US coal combustion-related sources changed from 1999–2008",
+       y="PM2.5 Emissions",x="Year")
+
+dev.copy(png, file = "plot4.png",width=480, height=480)
+dev.off()
+
+# How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
+library(dplyr)
+library(ggplot2)
+mobile <- SCC[grepl("^Mobile - On-Road",SCC$EI.Sector),]
+idx <- as.character(mobile[,1])
+BAlTmobile <- subset(NEI,NEI$SCC %in% idx & NEI$fips=="24510") %>%
+  group_by(Year = year) %>%
+  summarise(Values=sum(Emissions))
+
+ggplot(BAlTmobile,aes(BAlTmobile$Year,BAlTmobile$Values))+geom_line()+
+  labs(title = "Motor vehicle sources changed from 1999–2008 in Baltimore",
+       y="PM2.5 Emissions",x="Year")
+
+# Compare emissions from motor vehicle sources in Baltimore City with 
+# emissions from motor vehicle sources in Los Angeles County, California 
+# (fips==06037). Which city has seen greater changes over time in motor vehicle
+# emissions?
+library(dplyr)
+library(ggplot2)
+mobile <- SCC[grepl("^Mobile - On-Road",SCC$EI.Sector),]
+idx <- as.character(mobile[,1])
+BAlTmobile <- subset(NEI,NEI$SCC %in% idx & NEI$fips=="24510") %>%
+  group_by(Year = year) %>%
+  summarise(Values=sum(Emissions))
+BAlTmobile$City <- rep("Baltimore",4)
+LAmobile <- subset(NEI,NEI$SCC %in% idx & NEI$fips=="06037") %>%
+  group_by(Year = year) %>%
+  summarise(Values=sum(Emissions))
+LAmobile$City <- rep("LA",4)
+
+FData <- rbind(BAlTmobile,LAmobile)
+
+ggplot(FData,aes(FData$Year,FData$Values,color=FData$City))+geom_line()+
+  labs(title = "Compare emissions from motor vehicle sources Baltimore vs LA",
+       y="PM2.5 Emissions",x="Year",color="City")
 
