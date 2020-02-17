@@ -812,3 +812,64 @@ with(mrg,plot(rep(1999,52),mrg[,2],xlim = c(1998,2020)))
 with(mrg,points(rep(2019,52),mrg[,3]))
 segments(rep(1999,52),mrg[,2],rep(2019,52),mrg[,3]) # joint points
 
+# Week 4 Project ----
+getwd()
+dir()
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
+
+summary(NEI$Emissions)
+names(NEI)
+str(NEI)
+unique(NEI$year)
+
+#Have total emissions from PM2.5 decreased in the United States from 1999 to 2008? Using the base plotting system,
+# make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+library(dplyr)
+yearComp <- NEI %>%
+    group_by(Year=year) %>%
+    summarise(Values=sum(Emissions))
+plot(yearComp$Year,yearComp$Values,ylab = "PM2.5 totals", xlab = "Years",
+     main = "Total emissions PM2.5 in the USA from 1999 to 2008")
+segments(yearComp$Year[1],yearComp$Values[1],yearComp$Year[2],yearComp$Values[2])
+segments(yearComp$Year[2],yearComp$Values[2],yearComp$Year[3],yearComp$Values[3])
+segments(yearComp$Year[3],yearComp$Values[3],yearComp$Year[4],yearComp$Values[4])
+
+dev.copy(png, file = "plot1.png",width=480, height=480)
+dev.off()
+
+# Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips=="24510") from 1999 to 2008? Use 
+# the base plotting system to make a plot answering this question.
+library(dplyr)
+balt <- subset(NEI,NEI$fips=="24510")
+dbalt <- balt %>%
+    group_by(Year = year) %>%
+    summarise(Values=sum(Emissions))
+plot(dbalt$Year,dbalt$Values,ylab = "PM2.5 totals", xlab = "Years",
+     main = "Total emissions PM2.5 in Baltimore from 1999 to 2008")
+segments(dbalt$Year[1],dbalt$Values[1],dbalt$Year[2],dbalt$Values[2])
+segments(dbalt$Year[2],dbalt$Values[2],dbalt$Year[3],dbalt$Values[3])
+segments(dbalt$Year[3],dbalt$Values[3],dbalt$Year[4],dbalt$Values[4])
+
+dev.copy(png, file = "plot2.png",width=480, height=480)
+dev.off()
+
+# Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of these four 
+# sources have seen decreases in emissions from 1999–2008 for Baltimore City? Which have seen increases in emissions 
+# from 1999–2008? Use the ggplot2 plotting system to make a plot answer this question.
+library(dplyr)
+library(ggplot2)
+balt <- subset(NEI,NEI$fips=="24510")
+dbalt <- balt %>%
+    group_by(Year = year,Type=type) %>%
+    summarise(Values=sum(Emissions))
+ggplot(dbalt,aes(dbalt$Year,dbalt$Values))+ 
+    geom_line(aes(color=dbalt$Type)) + 
+    labs(title = "Emissions from 1999–2008 for Baltimore City",y="PM2.5 Emissions",x="Year",color="Type")
+
+dev.copy(png, file = "plot3.png",width=480, height=480)
+dev.off()
+
+# Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
+str(SCC)
+
