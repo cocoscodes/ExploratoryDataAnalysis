@@ -871,5 +871,5 @@ dev.copy(png, file = "plot3.png",width=480, height=480)
 dev.off()
 
 # Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
-str(SCC)
+unique(SCC$EI.Sector %in%"Coal")
 
